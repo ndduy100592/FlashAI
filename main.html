@@ -1834,55 +1834,126 @@
 
             // --- MẶT SAU: NGHĨA + VÍ DỤ ---
             const back = flashcard.querySelector('.back');
-            let backHtml = '';
-            backHtml += '<div style="text-align:center; width:100%;">';
-            backHtml += '<div style="font-size:2rem; font-weight:bold;">' + escapeHtml(card.meaning) + '</div>';
-
+            
+            // Xóa nội dung cũ của back
+            back.innerHTML = '';
+            
+            // Tạo container chính cho back
+            const backContainer = document.createElement('div');
+            backContainer.style.textAlign = 'center';
+            backContainer.style.width = '100%';
+            backContainer.style.display = 'flex';
+            backContainer.style.flexDirection = 'column';
+            backContainer.style.alignItems = 'center';
+            backContainer.style.justifyContent = 'center';
+            backContainer.style.height = '100%';
+            
+            // Nghĩa tiếng Việt
+            const meaningEl = document.createElement('div');
+            meaningEl.style.fontSize = '2rem';
+            meaningEl.style.fontWeight = 'bold';
+            meaningEl.textContent = card.meaning;
+            backContainer.appendChild(meaningEl);
+            
+            // Câu ví dụ tiếng Anh (nếu có)
             if (card.example) {
-                backHtml += '<div style="margin-top:15px; font-style:italic; font-size:1.1rem;">' + escapeHtml(card.example) +
-                    '</div>';
+                const exampleContainer = document.createElement('div');
+                exampleContainer.style.marginTop = '15px';
+                exampleContainer.style.display = 'flex';
+                exampleContainer.style.flexDirection = 'column';
+                exampleContainer.style.alignItems = 'center';
+                
+                const exampleEl = document.createElement('div');
+                exampleEl.style.fontStyle = 'italic';
+                exampleEl.style.fontSize = '1.1rem';
+                exampleEl.textContent = card.example;
+                exampleContainer.appendChild(exampleEl);
+                
+                // Bản dịch câu ví dụ (nếu có)
                 if (card.exampleTranslation) {
-                    backHtml += '<div style="font-size:0.95rem; opacity:0.9; margin-top:6px;">→ ' + escapeHtml(card
-                        .exampleTranslation) + '</div>';
+                    const translationEl = document.createElement('div');
+                    translationEl.style.fontSize = '0.95rem';
+                    translationEl.style.opacity = '0.9';
+                    translationEl.style.marginTop = '6px';
+                    translationEl.textContent = '→ ' + card.exampleTranslation;
+                    exampleContainer.appendChild(translationEl);
                 }
+                
                 // Nút nghe câu ví dụ
                 const exampleVoiceBtn = createVoiceButton(card.example);
                 exampleVoiceBtn.style.marginTop = '10px';
                 exampleVoiceBtn.style.fontSize = '1.6rem';
-                backHtml += '<div style="display:flex; justify-content:center;">' + exampleVoiceBtn.outerHTML + '</div>';
+                exampleContainer.appendChild(exampleVoiceBtn);
+                
+                backContainer.appendChild(exampleContainer);
             }
-
-            backHtml += '<div class="back-actions" style="margin-top:20px;">';
-            backHtml += '<p id="wrong">Học lại</p>';
-            backHtml += '<p id="right">Đã nhớ</p>';
-            backHtml += '</div>';
-            backHtml += '</div>';
-
-            if (back) back.innerHTML = backHtml;
-
-            // Gắn sự kiện cho nút Đã nhớ / Học lại
-            const rightBtn = back ? back.querySelector('#right') : null;
-            if (rightBtn) {
-                rightBtn.addEventListener('click', function() {
-                    const user = auth.currentUser;
-                    if (!user) return;
-                    saveLearningHistory('learned', card.word);
-                    db.collection('users').doc(user.uid).collection('cards').doc(card.id).update({
-                        status: 'known'
-                    }).then(function() {
-                        currentCardIndex++;
-                        showCard();
-                    });
-                });
-            }
-
-            const wrongBtn = back ? back.querySelector('#wrong') : null;
-            if (wrongBtn) {
-                wrongBtn.addEventListener('click', function() {
-                    cardsToLearn.push(cardsToLearn.splice(currentCardIndex, 1)[0]);
+            
+            // Nút hành động
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'back-actions';
+            actionsContainer.style.marginTop = '20px';
+            actionsContainer.style.width = '100%';
+            actionsContainer.style.display = 'flex';
+            actionsContainer.style.justifyContent = 'space-around';
+            
+            const wrongBtn = document.createElement('p');
+            wrongBtn.id = 'wrong';
+            wrongBtn.textContent = 'Học lại';
+            wrongBtn.style.padding = '10px 20px';
+            wrongBtn.style.borderRadius = '25px';
+            wrongBtn.style.cursor = 'pointer';
+            wrongBtn.style.color = 'white';
+            wrongBtn.style.fontWeight = '600';
+            wrongBtn.style.background = 'rgba(244, 67, 54, 0.8)';
+            wrongBtn.style.transition = 'all 0.3s ease';
+            wrongBtn.onmouseover = function() {
+                this.style.background = '#f44336';
+                this.style.transform = 'scale(1.05)';
+            };
+            wrongBtn.onmouseout = function() {
+                this.style.background = 'rgba(244, 67, 54, 0.8)';
+                this.style.transform = 'scale(1)';
+            };
+            wrongBtn.addEventListener('click', function() {
+                cardsToLearn.push(cardsToLearn.splice(currentCardIndex, 1)[0]);
+                showCard();
+            });
+            
+            const rightBtn = document.createElement('p');
+            rightBtn.id = 'right';
+            rightBtn.textContent = 'Đã nhớ';
+            rightBtn.style.padding = '10px 20px';
+            rightBtn.style.borderRadius = '25px';
+            rightBtn.style.cursor = 'pointer';
+            rightBtn.style.color = 'white';
+            rightBtn.style.fontWeight = '600';
+            rightBtn.style.background = 'rgba(76, 175, 80, 0.8)';
+            rightBtn.style.transition = 'all 0.3s ease';
+            rightBtn.onmouseover = function() {
+                this.style.background = '#4CAF50';
+                this.style.transform = 'scale(1.05)';
+            };
+            rightBtn.onmouseout = function() {
+                this.style.background = 'rgba(76, 175, 80, 0.8)';
+                this.style.transform = 'scale(1)';
+            };
+            rightBtn.addEventListener('click', function() {
+                const user = auth.currentUser;
+                if (!user) return;
+                saveLearningHistory('learned', card.word);
+                db.collection('users').doc(user.uid).collection('cards').doc(card.id).update({
+                    status: 'known'
+                }).then(function() {
+                    currentCardIndex++;
                     showCard();
                 });
-            }
+            });
+            
+            actionsContainer.appendChild(wrongBtn);
+            actionsContainer.appendChild(rightBtn);
+            backContainer.appendChild(actionsContainer);
+            
+            back.appendChild(backContainer);
         }
 
         // ============================================================
@@ -1933,53 +2004,126 @@
 
             // --- MẶT SAU: NGHĨA + VÍ DỤ ---
             const back = flashcard.querySelector('.back');
-            let backHtml = '';
-            backHtml += '<div style="text-align:center; width:100%;">';
-            backHtml += '<div style="font-size:2rem; font-weight:bold;">' + escapeHtml(card.meaning) + '</div>';
-
+            
+            // Xóa nội dung cũ của back
+            back.innerHTML = '';
+            
+            // Tạo container chính cho back
+            const backContainer = document.createElement('div');
+            backContainer.style.textAlign = 'center';
+            backContainer.style.width = '100%';
+            backContainer.style.display = 'flex';
+            backContainer.style.flexDirection = 'column';
+            backContainer.style.alignItems = 'center';
+            backContainer.style.justifyContent = 'center';
+            backContainer.style.height = '100%';
+            
+            // Nghĩa tiếng Việt
+            const meaningEl = document.createElement('div');
+            meaningEl.style.fontSize = '2rem';
+            meaningEl.style.fontWeight = 'bold';
+            meaningEl.textContent = card.meaning;
+            backContainer.appendChild(meaningEl);
+            
+            // Câu ví dụ tiếng Anh (nếu có)
             if (card.example) {
-                backHtml += '<div style="margin-top:15px; font-style:italic; font-size:1.1rem;">' + escapeHtml(card.example) +
-                    '</div>';
+                const exampleContainer = document.createElement('div');
+                exampleContainer.style.marginTop = '15px';
+                exampleContainer.style.display = 'flex';
+                exampleContainer.style.flexDirection = 'column';
+                exampleContainer.style.alignItems = 'center';
+                
+                const exampleEl = document.createElement('div');
+                exampleEl.style.fontStyle = 'italic';
+                exampleEl.style.fontSize = '1.1rem';
+                exampleEl.textContent = card.example;
+                exampleContainer.appendChild(exampleEl);
+                
+                // Bản dịch câu ví dụ (nếu có)
                 if (card.exampleTranslation) {
-                    backHtml += '<div style="font-size:0.95rem; opacity:0.9; margin-top:6px;">→ ' + escapeHtml(card
-                        .exampleTranslation) + '</div>';
+                    const translationEl = document.createElement('div');
+                    translationEl.style.fontSize = '0.95rem';
+                    translationEl.style.opacity = '0.9';
+                    translationEl.style.marginTop = '6px';
+                    translationEl.textContent = '→ ' + card.exampleTranslation;
+                    exampleContainer.appendChild(translationEl);
                 }
+                
+                // Nút nghe câu ví dụ
                 const exampleVoiceBtn = createVoiceButton(card.example);
                 exampleVoiceBtn.style.marginTop = '10px';
                 exampleVoiceBtn.style.fontSize = '1.6rem';
-                backHtml += '<div style="display:flex; justify-content:center;">' + exampleVoiceBtn.outerHTML + '</div>';
+                exampleContainer.appendChild(exampleVoiceBtn);
+                
+                backContainer.appendChild(exampleContainer);
             }
-
-            backHtml += '<div class="back-actions" style="margin-top:20px;">';
-            backHtml += '<p id="review-wrong">Cần ôn lại</p>';
-            backHtml += '<p id="review-right">Đã thuộc</p>';
-            backHtml += '</div>';
-            backHtml += '</div>';
-
-            if (back) back.innerHTML = backHtml;
-
-            const rightBtn = back ? back.querySelector('#review-right') : null;
-            if (rightBtn) {
-                rightBtn.addEventListener('click', function() {
-                    const user = auth.currentUser;
-                    if (!user) return;
-                    saveLearningHistory('mastered', card.word);
-                    db.collection('users').doc(user.uid).collection('cards').doc(card.id).update({
-                        status: 'mastered'
-                    }).then(function() {
-                        currentCardIndex++;
-                        showReviewCard();
-                    });
-                });
-            }
-
-            const wrongBtn = back ? back.querySelector('#review-wrong') : null;
-            if (wrongBtn) {
-                wrongBtn.addEventListener('click', function() {
-                    cardsToReview.push(cardsToReview.splice(currentCardIndex, 1)[0]);
+            
+            // Nút hành động
+            const actionsContainer = document.createElement('div');
+            actionsContainer.className = 'back-actions';
+            actionsContainer.style.marginTop = '20px';
+            actionsContainer.style.width = '100%';
+            actionsContainer.style.display = 'flex';
+            actionsContainer.style.justifyContent = 'space-around';
+            
+            const wrongBtn = document.createElement('p');
+            wrongBtn.id = 'review-wrong';
+            wrongBtn.textContent = 'Cần ôn lại';
+            wrongBtn.style.padding = '10px 20px';
+            wrongBtn.style.borderRadius = '25px';
+            wrongBtn.style.cursor = 'pointer';
+            wrongBtn.style.color = 'white';
+            wrongBtn.style.fontWeight = '600';
+            wrongBtn.style.background = 'rgba(244, 67, 54, 0.8)';
+            wrongBtn.style.transition = 'all 0.3s ease';
+            wrongBtn.onmouseover = function() {
+                this.style.background = '#f44336';
+                this.style.transform = 'scale(1.05)';
+            };
+            wrongBtn.onmouseout = function() {
+                this.style.background = 'rgba(244, 67, 54, 0.8)';
+                this.style.transform = 'scale(1)';
+            };
+            wrongBtn.addEventListener('click', function() {
+                cardsToReview.push(cardsToReview.splice(currentCardIndex, 1)[0]);
+                showReviewCard();
+            });
+            
+            const rightBtn = document.createElement('p');
+            rightBtn.id = 'review-right';
+            rightBtn.textContent = 'Đã thuộc';
+            rightBtn.style.padding = '10px 20px';
+            rightBtn.style.borderRadius = '25px';
+            rightBtn.style.cursor = 'pointer';
+            rightBtn.style.color = 'white';
+            rightBtn.style.fontWeight = '600';
+            rightBtn.style.background = 'rgba(76, 175, 80, 0.8)';
+            rightBtn.style.transition = 'all 0.3s ease';
+            rightBtn.onmouseover = function() {
+                this.style.background = '#4CAF50';
+                this.style.transform = 'scale(1.05)';
+            };
+            rightBtn.onmouseout = function() {
+                this.style.background = 'rgba(76, 175, 80, 0.8)';
+                this.style.transform = 'scale(1)';
+            };
+            rightBtn.addEventListener('click', function() {
+                const user = auth.currentUser;
+                if (!user) return;
+                saveLearningHistory('mastered', card.word);
+                db.collection('users').doc(user.uid).collection('cards').doc(card.id).update({
+                    status: 'mastered'
+                }).then(function() {
+                    currentCardIndex++;
                     showReviewCard();
                 });
-            }
+            });
+            
+            actionsContainer.appendChild(wrongBtn);
+            actionsContainer.appendChild(rightBtn);
+            backContainer.appendChild(actionsContainer);
+            
+            back.appendChild(backContainer);
         }
 
         // ============================================================
@@ -2611,9 +2755,6 @@
             }
         }
 
-        // ============================================================
-        // XỬ LÝ ĐĂNG NHẬP
-        // ============================================================
         auth.onAuthStateChanged(function(user) {
             if (user) {
                 console.log('User logged in:', user.uid);
@@ -2630,9 +2771,6 @@
             }
         });
 
-        // ============================================================
-        // KHỞI CHẠY
-        // ============================================================
         initEventListeners();
     </script>
 </body>
